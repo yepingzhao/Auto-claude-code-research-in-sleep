@@ -118,7 +118,8 @@ mcp__codex__codex:
     2. Are all hyperparameters from the plan reflected in the code?
     3. Are there any logic bugs (wrong loss function, incorrect data split, missing eval)?
     4. Is the evaluation metric computed correctly?
-    5. Any potential issues (OOM risk, numerical instability, missing seeds)?
+    5. **CRITICAL: Does evaluation use the dataset's actual ground truth labels — NOT another model's output as ground truth?** This is a common and severe bug.
+    6. Any potential issues (OOM risk, numerical instability, missing seeds)?
 
     For each issue found, specify: CRITICAL / MAJOR / MINOR and the exact fix.
 ```
@@ -235,6 +236,7 @@ Ready for Workflow 2:
 ## Key Rules
 
 - **Large file handling**: If the Write tool fails due to file size, immediately retry using Bash (`cat << 'EOF' > file`) to write in chunks. Do NOT ask the user for permission — just do it silently.
+- **CRITICAL — Evaluation must use dataset ground truth.** When writing evaluation scripts, ALWAYS compare model predictions against the dataset's actual ground truth labels/targets — NEVER use another model's output as ground truth. Double-check: (1) ground truth comes from the dataset split, not from a baseline/backbone model, (2) evaluation metrics are computed against the same ground truth for all methods, (3) if the task has official eval scripts, use those.
 - **Follow the plan.** Do not invent experiments not in EXPERIMENT_PLAN.md. If you think something is missing, note it but don't add it.
 - **Sanity first.** Never deploy a full suite without verifying the sanity stage passes.
 - **Reuse existing code.** Scan the project before writing new scripts. Extend, don't duplicate.
