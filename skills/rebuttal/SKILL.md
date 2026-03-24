@@ -45,6 +45,7 @@ Workflow 4:   rebuttal (post-submission external reviews)
 - **MAX_STRESS_TEST_ROUNDS = 1** — One Codex MCP critique round.
 - **MAX_FOLLOWUP_ROUNDS = 3** — per reviewer thread.
 - **AUTO_EXPERIMENT = false** — When `true`, automatically invoke `/experiment-bridge` to run supplementary experiments when the strategy plan identifies reviewer concerns that require new empirical evidence. When `false` (default), pause and present the evidence gap to the user for manual handling.
+- **QUICK_MODE = false** — When `true`, only run Phase 0-3 (parse reviews, atomize concerns, build strategy). Outputs `ISSUE_BOARD.md` + `STRATEGY_PLAN.md` and stops — no drafting, no stress test. Useful for quickly understanding what reviewers want before deciding how to respond.
 - **REBUTTAL_DIR = `rebuttal/`**
 
 > Override: `/rebuttal "paper/" — venue: NeurIPS, character limit: 5000`
@@ -103,6 +104,8 @@ Create `rebuttal/STRATEGY_PLAN.md`.
 3. Build **character budget** (10-15% opener, 75-80% per-reviewer, 5-10% closing)
 4. Identify **blocked claims** (ungrounded or unapproved)
 5. If unresolved blockers → pause and present to user
+
+**QUICK_MODE exit**: If `QUICK_MODE = true`, stop here. Present `ISSUE_BOARD.md` + `STRATEGY_PLAN.md` to the user and summarize: how many issues per reviewer, shared vs unique concerns, recommended priorities, and evidence gaps. The user can then decide to continue with full rebuttal (`/rebuttal — quick mode: false`) or write manually.
 
 ### Phase 3.5: Evidence Sprint (when AUTO_EXPERIMENT = true)
 
