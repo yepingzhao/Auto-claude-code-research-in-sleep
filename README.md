@@ -818,7 +818,7 @@ cp -r skills/research-lit ~/.claude/skills/
 <details>
 <summary><b>Optional: Codex Plugin for Code Review</b></summary>
 
-[codex-plugin-cc](https://github.com/openai/codex-plugin-cc) provides `/codex:review` and `/codex:adversarial-review` for experiment code checking. This is **separate from** the Codex MCP used for paper review — the plugin only reviews code (git diff), not research content.
+[codex-plugin-cc](https://github.com/openai/codex-plugin-cc) provides additional Codex capabilities that ARIS auto-detects when installed:
 
 ```bash
 # In Claude Code:
@@ -828,7 +828,15 @@ cp -r skills/research-lit ~/.claude/skills/
 /codex:setup
 ```
 
-Use it when writing experiment code in Workflow 1.5 — e.g., `/codex:adversarial-review` after implementing your training script.
+**Where ARIS uses the plugin:**
+
+| Skill | Command | What it does |
+|-------|---------|-------------|
+| `/codex:review` | Workflow 1.5 | Review experiment code before GPU deployment |
+| `/codex:adversarial-review` | Workflow 1.5 | Adversarial code review (find edge cases, bugs) |
+| `/codex:rescue` | Workflow 1.5 + 3 | **Auto-debug rescue** — when experiment or LaTeX compilation fails after 2 attempts, Codex independently diagnoses the root cause before the next retry |
+
+All plugin features are **optional** — if not installed, ARIS falls back to Claude's own diagnosis. The plugin just adds a second pair of eyes.
 
 > Note: ARIS's core cross-model review (paper scoring, idea evaluation, rebuttal stress test) still uses Codex MCP, which allows custom prompts. The plugin cannot replace this.
 

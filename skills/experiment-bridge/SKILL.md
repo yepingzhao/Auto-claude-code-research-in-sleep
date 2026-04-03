@@ -163,7 +163,10 @@ If sanity fails → **auto-debug before giving up** (max 3 attempts):
    - CUDA error → check GPU availability, reduce model size
    - NaN/divergence → reduce learning rate, check data preprocessing
 3. **Fix and re-run** — apply the fix, re-run sanity
-4. **Still failing after 3 attempts?** → stop, report the failure with all attempted fixes and error logs. Do not proceed with broken code.
+4. **Attempt 2+ still failing? → Call in Codex rescue** (if Codex plugin installed):
+   Before the next retry, invoke `/codex:rescue` to get a second opinion on the root cause. Codex independently reads the code and error logs — it may spot issues Claude missed (wrong tensor shapes, subtle import shadowing, config mismatches, etc.). Apply its suggested fix, then re-run.
+   - If `/codex:rescue` is not available (plugin not installed), continue with Claude's own diagnosis
+5. **Still failing after 3 attempts?** → stop, report the failure with all attempted fixes and error logs. Do not proceed with broken code.
 
 > Never give up on the first failure. Most experiment crashes are fixable without human intervention.
 
