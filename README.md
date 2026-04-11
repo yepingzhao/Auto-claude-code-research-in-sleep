@@ -111,6 +111,7 @@ Two outputs: `PASTE_READY.txt` (exact char count, paste to venue) + `REBUTTAL_DR
 
 ## 📢 What's New
 
+- **2026-04-10** — ![NEW](https://img.shields.io/badge/NEW-red?style=flat-square) ⚡ **[Effort Levels](skills/shared-references/effort-contract.md)** — `— effort: lite | balanced | max | beast`. Controls work intensity across all skills: papers found, ideas generated, review rounds, writing depth. Codex reasoning stays `xhigh` always. `beast` = every knob to maximum for top-venue sprints. Default `balanced` = zero change for existing users. [Details →](#-effort-levels)
 - **2026-04-10** — ![NEW](https://img.shields.io/badge/NEW-red?style=flat-square) 🔎 **[DeepXiv integration](skills/deepxiv/SKILL.md)** — progressive paper retrieval via DeepXiv CLI. Opt-in: `— sources: deepxiv` or `— sources: all, deepxiv`. Staged reading: search → brief → head → section. `pip install deepxiv-sdk` to enable. Community contribution by [@DreamEnding](https://github.com/DreamEnding)
 - **2026-04-10** — ![NEW](https://img.shields.io/badge/NEW-red?style=flat-square) 🛡️ **[`/experiment-audit`](skills/experiment-audit/SKILL.md)** — cross-model experiment integrity verification. GPT-5.4 reads your eval scripts and results directly, checks for fake ground truth, self-normalized scores, phantom results, and scope inflation ([#131](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/issues/131), [#57](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/issues/57)). Advisory — warns loudly, never blocks. `/result-to-claim` auto-reads audit if present. New [experiment-integrity.md](skills/shared-references/experiment-integrity.md) shared reference. **The executor must never judge its own integrity.**
 - **2026-04-10** — ![NEW](https://img.shields.io/badge/NEW-red?style=flat-square) 🧠 **[`tools/smart_update.sh`](tools/smart_update.sh)** — intelligent skill updater. Compares local vs upstream, detects personal customizations (server paths, API keys), only updates safe skills. `bash tools/smart_update.sh --apply`
@@ -234,6 +235,7 @@ claude
 > | `gpu` | `local` | GPU target: `local` (default), `remote` (SSH server), or `vast` (rent on-demand from [Vast.ai](https://vast.ai) — auto-provision, auto-destroy) |
 > | `compact` | `false` | Generate compact summary files (`IDEA_CANDIDATES.md`, `findings.md`, `EXPERIMENT_LOG.md`) for short-context models and session recovery |
 > | `ref paper` | `false` | Reference paper to build on (PDF path or arXiv URL). Summarized first, then ideas extend/improve it. Combine with `base repo` for paper+code workflows |
+> | `effort` | `balanced` | Work intensity: `lite` (0.4x tokens), `balanced` (default), `max` (2.5x), `beast` (5-8x). Controls breadth/depth/iterations. Codex reasoning always `xhigh`. See [Effort Levels](#-effort-levels) |
 > | `difficulty` | `medium` | Reviewer adversarial level: `medium` (default), `hard` (+ memory + debate), `nightmare` (+ GPT reads repo via `codex exec`) |
 >
 > ```
@@ -243,6 +245,9 @@ claude
 > /research-pipeline "your topic" — sources: all, deepxiv                        # default sources plus DeepXiv progressive retrieval
 > /research-pipeline "your topic" — arxiv download: true                         # download top arXiv PDFs during literature survey
 > /research-pipeline "your topic" — difficulty: nightmare                        # maximum adversarial review before submission
+> /research-pipeline "your topic" — effort: beast                               # all knobs to maximum — top-venue sprint
+> /research-pipeline "your topic" — effort: lite                                # quick exploration, save tokens
+> /research-pipeline "your topic" — effort: max, review_rounds: 3               # max effort but cap review at 3 rounds
 > /research-pipeline "your topic" — AUTO_PROCEED: false, human checkpoint: true  # combine options
 > ```
 
@@ -905,6 +910,60 @@ claude   # hooks active immediately
 **Skills involved:** `meta-optimize`
 
 > 💡 This is a **maintenance workflow**, not part of the W1→W1.5→W2→W3→W4 research pipeline. Run it periodically, like `git gc` for your research harness.
+
+---
+
+### ⚡ Effort Levels
+
+> **"How hard should ARIS work?"** — Every skill accepts `— effort: lite | balanced | max | beast`.
+
+| Level | Tokens | Best for | What changes |
+|-------|:------:|----------|-------------|
+| `lite` | ~0.4x | Quick exploration, budget users | Fewer papers, ideas, rounds. Minimum viable depth |
+| `balanced` | 1x | Normal workflow (**default**) | Current ARIS behavior. Zero change for existing users |
+| `max` | ~2.5x | Serious submission prep | More papers, deeper review, more ablations |
+| `beast` | ~5-8x | Top-venue final sprint | Every knob to maximum. No budget limit |
+
+**What NEVER changes regardless of effort:**
+- Codex reasoning: **always xhigh** (reviewer quality is non-negotiable)
+- DBLP/CrossRef citations: **always on**
+- Reviewer independence: **always on**
+- Experiment integrity: **always on**
+
+```bash
+# Every skill accepts effort independently
+/research-lit "topic" — effort: beast              # 40-50 papers, 15+ queries
+/idea-creator "direction" — effort: lite           # 4-6 ideas, quick filter
+/auto-review-loop — effort: max                    # 6 rounds, 4-6 fixes/round
+
+# Mix with specific overrides
+/auto-review-loop — effort: beast, review_rounds: 3  # beast everything, but cap at 3 rounds
+
+# Full pipeline
+/research-pipeline "your topic" — effort: beast    # top-venue sprint mode
+```
+
+<details>
+<summary><b>Full effort comparison table</b> — click to expand</summary>
+
+| Skill | Dimension | lite | balanced | max | beast |
+|-------|-----------|:----:|:--------:|:---:|:-----:|
+| research-lit | papers | 6-8 | 10-15 | 18-25 | 40-50 |
+| idea-creator | ideas | 4-6 | 8-12 | 12-16 | 20-30 |
+| idea-creator | pilots | 1-2 | 2-3 | 3-4 | 5-6 |
+| novelty-check | claims | 2-3 | 3-4 | 4-6 | all |
+| research-refine | rounds | 3 | 5 | 7 | 10+ |
+| experiment-plan | experiments | 3 | 5 | 7 | 10+ |
+| experiment-plan | seeds | 1 | 3 | 5 | 5 |
+| auto-review-loop | rounds | 2 | 3-4 | 6 | 8+ |
+| paper-improvement | rounds | 1 | 2 | 3 | 5 |
+| paper-illustration | iterations | 2 | 3 | 5 | 7 |
+| rebuttal | stress tests | 0-1 | 1 | 2 | 3 |
+| experiment-audit | depth | skip | basic | full | line-by-line |
+
+</details>
+
+> 📖 Full specification: [`shared-references/effort-contract.md`](skills/shared-references/effort-contract.md)
 
 ---
 
