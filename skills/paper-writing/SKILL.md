@@ -233,7 +233,38 @@ Invoke `/auto-paper-improvement-loop` to polish the paper:
 
 **Output:** Three PDFs for comparison + `PAPER_IMPROVEMENT_LOG.md`.
 
-**Format check** (included in improvement loop Step 8): After final recompilation, auto-detect and fix overfull hboxes (content exceeding margins), verify page count vs venue limit, and ensure compact formatting. Any overfull > 10pt is fixed before generating the final PDF.
+**Format check** (included in improvement loop Step 8): After final recompilation, auto-detect and fix overfull hboxes (content exceeding margins), verify page count vs venue limit, and ensure compact formatting. Location-aware thresholds: any main-body overfull blocks completion regardless of size; appendix overfulls block only if >10pt; bibliography overfulls block only if >20pt.
+
+### Phase 5.5: Final Paper Claim Audit (MANDATORY submission gate)
+
+After `/auto-paper-improvement-loop` finishes, **rerun** `/paper-claim-audit` before the final report whenever the paper contains numeric claims and machine-readable raw result files exist.
+
+Use the same detectors as Phase 4.7:
+- numeric-claim regex over `paper/main.tex` and `paper/sections/*.tex`
+- raw-evidence file search in `results/`, `outputs/`, `experiments/`, and `figures/` for `.json`, `.jsonl`, `.csv`, `.tsv`, `.yaml`, or `.yml`
+
+This phase is **mandatory** if both detectors are positive. It blocks the final report.
+If numeric claims exist but no raw result files are found, stop and warn the user before declaring the paper complete.
+If no numeric claims exist, skip.
+
+```bash
+NUMERIC_CLAIMS=$(rg -n -e '[0-9]+(\.[0-9]+)?\s*(%|\\%|±|\\pm|x|×)' \
+  -e '(accuracy|BLEU|F1|AUC|mAP|top-1|top-5|error|loss|perplexity|speedup|improvement)' \
+  paper/main.tex paper/sections 2>/dev/null || true)
+
+RAW_RESULT_FILES=$(find results outputs experiments figures -type f \
+  \( -name '*.json' -o -name '*.jsonl' -o -name '*.csv' -o -name '*.tsv' -o -name '*.yaml' -o -name '*.yml' \) 2>/dev/null | head -200)
+
+if [ -n "$NUMERIC_CLAIMS" ] && [ -n "$RAW_RESULT_FILES" ]; then
+    Run /paper-claim-audit "paper/"
+    If FAIL:
+        Fix mismatched numbers before the final report
+elif [ -n "$NUMERIC_CLAIMS" ]; then
+    Stop and warn: the paper contains numeric claims but no raw evidence files were found
+fi
+```
+
+**Empirical motivation:** in our April 2026 NeurIPS run, the final paper claimed `w ∈ {0,1,2,3}` for the width-tradeoff experiment but the raw JSON had `w ∈ {0,1,2,3,4,5}`. The crossing-point tolerance was claimed as `0.05%` but the actual relative error was `0.0577%`. Both were caught only after manual `paper-claim-audit` invocation in the final round; the improvement loop did not detect them.
 
 ### Phase 6: Final Report
 
